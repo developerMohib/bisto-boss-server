@@ -47,13 +47,15 @@ async function run() {
 
         // carts collection data 
         app.get('/carts', async(req, res)=> {
-          const cursor = cartCollection.find() ;
+          const email = req?.query.email ;
+          console.log(email, 'email')
+          const query = { email: email }
+          const cursor = cartCollection.find(query) ;
           const result = await cursor.toArray() ;
           res.send(result)
         })
         app.post('/carts', async (req, res) => {
           const cartItem = req.body ;
-          // console.log(cartItem)
           const result = await cartCollection.insertOne(cartItem) ;
           res.send(result)
         })
