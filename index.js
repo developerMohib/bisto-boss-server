@@ -30,15 +30,32 @@ async function run() {
         const database = client.db("bistoDB");
         const menuColl = database.collection("menuCollection");
         const reviewCollection = database.collection("reviewCollection");
+        const cartCollection = database.collection("cartsCollection");
 
+        // menu collection data read 
         app.get('/menu', async (req, res) => {
             const result = await menuColl.find().toArray(); 
             res.send(result) ;
         })
+
+        // review collection data read 
         app.get('/review', async (req, res) => {
             const cursor = reviewCollection.find() ;
             const result = await cursor.toArray() ;
             res.send(result)
+        })
+
+        // carts collection data 
+        app.get('/carts', async(req, res)=> {
+          const cursor = cartCollection.find() ;
+          const result = await cursor.toArray() ;
+          res.send(result)
+        })
+        app.post('/carts', async (req, res) => {
+          const cartItem = req.body ;
+          // console.log(cartItem)
+          const result = await cartCollection.insertOne(cartItem) ;
+          res.send(result)
         })
 
     // Send a ping to confirm a successful connection
