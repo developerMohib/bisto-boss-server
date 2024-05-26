@@ -28,9 +28,18 @@ async function run() {
     // await client.connect();
         // Get the database and collection
         const database = client.db("bistoDB");
+
         const menuColl = database.collection("menuCollection");
         const reviewCollection = database.collection("reviewCollection");
         const cartCollection = database.collection("cartsCollection");
+        const userCollection = database.collection("usersCollection");
+
+        // user collection data added
+        app.post('/users', async (req, res) => {
+          const user = req.body ;
+          const result = await userCollection.insertOne(user) ;
+          res.send(result)
+        })
 
         // menu collection data read 
         app.get('/menu', async (req, res) => {
