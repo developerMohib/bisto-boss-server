@@ -39,7 +39,7 @@ async function run() {
     app.post("/jwt", async (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: "1h",
+        expiresIn: "4h",
       });
       res.send({ token });
     });
@@ -81,7 +81,7 @@ async function run() {
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded?.email;
       const query = { email: email };
-      const user = await userCollection.find(query);
+      const user = await userCollection.findOne(query);
       const isAdmin = user?.role === "admin";
       if (!isAdmin) {
         return res.status(403).send({ message: "forbidden access" });
@@ -111,7 +111,7 @@ async function run() {
     });
 
     // user collection get
-    app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
+    app.get("/users",verifyToken,verifyAdmin, async (req, res) => {
       const allUser = userCollection.find();
       const result = await allUser.toArray();
       res.send(result);
