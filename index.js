@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 const app = express();
 require("dotenv").config();
 const port = process.env.PORT || 5000;
@@ -34,8 +35,50 @@ async function run() {
     const cartCollection = database.collection("cartsCollection");
     const userCollection = database.collection("usersCollection");
 
+    // jwt related api
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "1h",
+      });
+      res.send({ token });
+    });
+
+    // middle-wares
+    const verifyToken = (req, res, next) => {
+      console.log('inside the get ',req.headers.authorization)
+      const token = req.headers.authorization;
+      // if user token is none
+      if (!token) {
+        return res.status(401).send({ message: "access forbidden" });
+      }
+      // if user token get but not match
+      const splitToken = token.split(" ")[1];
+      if (!splitToken) {
+        return res.status(401).send({ message: "access forbidden not match" });
+      }
+      // token verify
+      jwt.verify(
+        splitToken,
+        process.env.ACCESS_TOKEN_SECRET,
+        (err, decoded) => {
+          if (err) {
+            // taile kicu koro
+            return res
+              .status(401)
+              .send({ message: "forbidden access bcz error " });
+          }
+          // else decoded 
+          else {
+            req.decoded = decoded
+            next()
+          }
+        }
+      );
+    };
+
     // user collection get
-    app.get("/users", async (req, res) => {
+    app.get("/users", verifyToken, async (req, res) => {
       const allUser = userCollection.find();
       const result = await allUser.toArray();
       res.send(result);
@@ -53,7 +96,8 @@ async function run() {
     });
     // menu collection data read
     app.get("/menu", async (req, res) => {
-      const result = await menuColl.find().toArray();
+      const cursor = menuColl.find();
+      const result = await cursor.toArray();
       res.send(result);
     });
     // review collection data read
@@ -70,12 +114,13 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     });
-    // cart collection data post 
+    // cart collection data post
     app.post("/carts", async (req, res) => {
       const cartItem = req.body;
       const result = await cartCollection.insertOne(cartItem);
       res.send(result);
     });
+
     // update role
     app.patch("/users/admin/:id", async (req, res) => {
       const id = req.params.id;
@@ -107,9 +152,7 @@ async function run() {
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
-  }
-  finally {
-
+  } finally {
   }
 }
 run().catch(console.dir);
