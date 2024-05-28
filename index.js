@@ -83,6 +83,7 @@ async function run() {
       const result = await allUser.toArray();
       res.send(result);
     });
+
     // user collection data added
     app.post("/users", async (req, res) => {
       const user = req.body;
@@ -94,12 +95,14 @@ async function run() {
       const result = await userCollection.insertOne(user);
       res.send(result);
     });
+
     // menu collection data read
     app.get("/menu", async (req, res) => {
       const cursor = menuColl.find();
       const result = await cursor.toArray();
       res.send(result);
     });
+    
     // review collection data read
     app.get("/review", async (req, res) => {
       const cursor = reviewCollection.find();
