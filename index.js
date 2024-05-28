@@ -46,7 +46,7 @@ async function run() {
 
     // middle-wares
     const verifyToken = (req, res, next) => {
-      console.log('inside the get ',req.headers.authorization)
+      // console.log("inside the get ", req.headers.authorization);
       const token = req.headers.authorization;
       // if user token is none
       if (!token) {
@@ -68,14 +68,48 @@ async function run() {
               .status(401)
               .send({ message: "forbidden access bcz error " });
           }
-          // else decoded 
+          // else decoded
           else {
-            req.decoded = decoded
-            next()
+            req.decoded = decoded;
+            next();
           }
         }
       );
     };
+
+    // verify admin
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded?.email;
+      console.log(email, 'email paw na kn')
+      const query = { email: email };
+      const user = await userCollection.find(query);
+      const isAdmin = user?.role === "admin";
+      if (!isAdmin) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      next();
+    };
+
+    // user admin create and verifying
+    app.get("/users/admin/:email", verifyToken, async (req, res) => {
+      const userEmail = req.params.email;
+
+      // you post your email when you post jwt from auth provider
+      const decodedEmail = req.decoded.email;
+      // if these are same then it's admin
+      if (userEmail !== decodedEmail) {
+        // make him / her Admin
+        return res.status(401).send({ message: "access user not match" });
+      }
+      // 
+      const query = { email: decodedEmail };
+      const user = await userCollection.findOne(query);
+      let admin = false;
+      if (user) {
+        admin = user?.role === "admin";
+      }
+      res.send({ admin });
+    });
 
     // user collection get
     app.get("/users", verifyToken, async (req, res) => {
@@ -102,7 +136,7 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     });
-    
+
     // review collection data read
     app.get("/review", async (req, res) => {
       const cursor = reviewCollection.find();
