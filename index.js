@@ -50,12 +50,12 @@ async function run() {
       const token = req.headers.authorization;
       // if user token is none
       if (!token) {
-        return res.status(401).send({ message: "access forbidden" });
+        return res.status(401).send({ message: "unauthorized access" });
       }
       // if user token get but not match
       const splitToken = token.split(" ")[1];
       if (!splitToken) {
-        return res.status(401).send({ message: "access forbidden not match" });
+        return res.status(401).send({ message: "unauthorized access" });
       }
       // token verify
       jwt.verify(
@@ -66,7 +66,7 @@ async function run() {
             // taile kicu koro
             return res
               .status(401)
-              .send({ message: "forbidden access bcz error " });
+              .send({ message: "unauthorized access" });
           }
           // else decoded
           else {
@@ -80,7 +80,6 @@ async function run() {
     // verify admin
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded?.email;
-      console.log(email, 'email paw na kn')
       const query = { email: email };
       const user = await userCollection.find(query);
       const isAdmin = user?.role === "admin";
@@ -99,7 +98,7 @@ async function run() {
       // if these are same then it's admin
       if (userEmail !== decodedEmail) {
         // make him / her Admin
-        return res.status(401).send({ message: "access user not match" });
+        return res.status(401).send({ message: "unauthorized access" });
       }
       // 
       const query = { email: decodedEmail };
@@ -112,7 +111,7 @@ async function run() {
     });
 
     // user collection get
-    app.get("/users", verifyToken, async (req, res) => {
+    app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
       const allUser = userCollection.find();
       const result = await allUser.toArray();
       res.send(result);
@@ -159,7 +158,7 @@ async function run() {
     });
 
     // update role
-    app.patch("/users/admin/:id", async (req, res) => {
+    app.patch("/users/admin/:id",verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const updateDoc = {
@@ -171,7 +170,7 @@ async function run() {
       res.send(result);
     });
     // delete user
-    app.delete("/users/:id", async (req, res) => {
+    app.delete("/users/:id",verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await userCollection.deleteOne(query);
