@@ -92,7 +92,7 @@ async function run() {
     // user admin create and verifying
     app.get("/users/admin/:email", verifyToken, async (req, res) => {
       const userEmail = req.params.email;
-
+      console.log(userEmail,'user email ')
       // you post your email when you post jwt from auth provider
       const decodedEmail = req.decoded.email;
       // if these are same then it's admin
@@ -140,6 +140,17 @@ async function run() {
     app.post("/menu",verifyToken, verifyAdmin, async (req, res) => {
       const item = req.body ;
       const result = await menuColl.insertOne(item);
+      res.send(result)
+    })
+
+    // menu item delete 
+    app.delete('/menu/:id',verifyToken,verifyAdmin, async (req, res)=> {
+      // looking for body or from ui
+      const id = req.params.id ;
+      // looking for database 
+      const query = {_id : new ObjectId(id)}
+      console.log(query, 'menu id delete')
+      const result = await menuColl.deleteOne(query)
       res.send(result)
     })
 
