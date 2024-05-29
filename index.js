@@ -136,6 +136,13 @@ async function run() {
       res.send(result);
     });
 
+    // menu data post to database 
+    app.post("/menu",verifyToken, verifyAdmin, async (req, res) => {
+      const item = req.body ;
+      const result = await menuColl.insertOne(item);
+      res.send(result)
+    })
+
     // review collection data read
     app.get("/review", async (req, res) => {
       const cursor = reviewCollection.find();
