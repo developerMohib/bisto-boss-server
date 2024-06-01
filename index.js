@@ -29,7 +29,6 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    // await client.connect();
     // Get the database and collection
     const database = client.db("bistoDB");
 
@@ -194,7 +193,7 @@ async function run() {
     app.post('/create-payment-intent', async(req, res) => {
       const {price} = req.body ;
       const amount = parseInt(price * 100) ;
-      console.log(amount, 'inside the intent')
+
       // payment intent with count and currency
       const paymentIntent = await stripe.paymentIntents.create({
         amount : amount ,
