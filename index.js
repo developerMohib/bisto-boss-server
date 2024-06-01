@@ -3,6 +3,9 @@ const cors = require("cors");
 const jwt = require("jsonwebtoken");
 const app = express();
 require("dotenv").config();
+
+const stripe = require('stripe')(process.env.STRIPE_SECRET_SK)
+// console.log('secret key ',process.env.STRIPE_SECRET_SK)
 const port = process.env.PORT || 5000;
 
 // middleware
@@ -92,7 +95,6 @@ async function run() {
     // user admin create and verifying
     app.get("/users/admin/:email", verifyToken, async (req, res) => {
       const userEmail = req.params.email;
-      console.log(userEmail,'user email ')
       // you post your email when you post jwt from auth provider
       const decodedEmail = req.decoded.email;
       // if these are same then it's admin
@@ -187,6 +189,25 @@ async function run() {
       const result = await userCollection.updateOne(query, updateDoc);
       res.send(result);
     });
+
+    // create payment intent
+    app.post('/create-payment-intent', async(req, res) => {
+      const {price} = req.body ;
+      const amount = parseInt(price * 100) ;
+      console.log(amount, 'inside the intent')
+      // payment intent with count and currency
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount : amount ,
+        currency: "usd",
+        payment_method_types: [
+          "card",
+        ],
+      });
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    })
+
     // delete user
     app.delete("/users/:id",verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
