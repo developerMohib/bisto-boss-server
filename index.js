@@ -5,7 +5,6 @@ const app = express();
 require("dotenv").config();
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_SK)
-// console.log('secret key ',process.env.STRIPE_SECRET_SK)
 const port = process.env.PORT || 5000;
 
 // middleware
@@ -33,9 +32,9 @@ async function run() {
     const database = client.db("bistoDB");
 
     const menuColl = database.collection("menuCollection");
-    const reviewCollection = database.collection("reviewCollection");
     const cartCollection = database.collection("cartsCollection");
     const userCollection = database.collection("usersCollection");
+    const reviewCollection = database.collection("reviewCollection");
     const paymentCollection = database.collection("paymentCollection");
 
     // jwt related api
@@ -111,6 +110,24 @@ async function run() {
       }
       res.send({ admin });
     });
+    // get some estimate count 
+    app.get('/admin-states',verifyToken, verifyAdmin, async(req,res)=>{
+      const estimateUser = await userCollection.estimatedDocumentCount() ;
+      const estimateOrder = await paymentCollection.estimatedDocumentCount() ;
+      const estimateItem = await menuColl.estimatedDocumentCount() ;
+      const result = await paymentCollection.aggregate([
+        {
+          $group : {
+            _id : null , revenue : { $sum : '$price' }
+          }
+        }
+      ]).toArray() ;
+      const revenue = result.length > 0 ? result[0].revenue : 0 ;
+
+      res.send({
+        estimateUser,estimateOrder,estimateItem, revenue
+      })
+    })
 
     // user collection get
     app.get("/users",verifyToken,verifyAdmin, async (req, res) => {
