@@ -36,6 +36,7 @@ async function run() {
     const reviewCollection = database.collection("reviewCollection");
     const cartCollection = database.collection("cartsCollection");
     const userCollection = database.collection("usersCollection");
+    const paymentCollection = database.collection("paymentCollection");
 
     // jwt related api
     app.post("/jwt", async (req, res) => {
@@ -160,7 +161,7 @@ async function run() {
       const cursor = reviewCollection.find();
       const result = await cursor.toArray();
       res.send(result);
-    });
+    }); 
     // carts collection data
     app.get("/carts", async (req, res) => {
       const email = req?.query.email;
@@ -175,6 +176,18 @@ async function run() {
       const result = await cartCollection.insertOne(cartItem);
       res.send(result);
     });
+
+    // payment order 
+    app.post('/confirmd-order', async (req, res) => {
+      const cartItem = req.body ;
+      const result = await paymentCollection.insertOne(cartItem);
+      console.log('cart after payment', cartItem);
+      const query = { _id : {
+        $in: cartItem.cartId.map(id => new ObjectId(id))
+      }}
+      const newResult = await cartCollection.deleteMany(query);
+      res.send({result, newResult})
+    })
 
     // update role
     app.patch("/users/admin/:id",verifyToken, verifyAdmin, async (req, res) => {
