@@ -162,6 +162,7 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     }); 
+
     // carts collection data
     app.get("/carts", async (req, res) => {
       const email = req?.query.email;
@@ -170,6 +171,7 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     });
+
     // cart collection data post
     app.post("/carts", async (req, res) => {
       const cartItem = req.body;
@@ -177,11 +179,23 @@ async function run() {
       res.send(result);
     });
 
+    // payment history geting
+    app.get('/confirmd-order/:email', verifyToken, async (req, res) => {
+      const paramsEmail = req.params?.email ;
+      const query = {email: paramsEmail}
+      const decodedEmail = req?.decoded?.email ;
+      console.log(decodedEmail,'decoded email')
+      if(paramsEmail !== decodedEmail){
+        return res.status(403).send({massage:'forbiden access'})
+      }
+      const result = await paymentCollection.find().toArray();
+      res.send(result)
+    })
+
     // payment order 
     app.post('/confirmd-order', async (req, res) => {
       const cartItem = req.body ;
       const result = await paymentCollection.insertOne(cartItem);
-      console.log('cart after payment', cartItem);
       const query = { _id : {
         $in: cartItem.cartId.map(id => new ObjectId(id))
       }}
